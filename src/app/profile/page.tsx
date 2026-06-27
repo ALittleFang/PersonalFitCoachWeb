@@ -10,6 +10,9 @@ type Goal = UserProfile["goal"];
 
 interface ProfileForm {
   name: string;
+  gender: string;
+  birthYear: number;
+  heightCm: number;
   weightKg: number;
   targetWeightKg: number;
   goal: Goal;
@@ -32,6 +35,11 @@ const activityOptions = [
 ];
 
 const formatGoal = (goal: string) => goalOptions.find(item => item.id === goal)?.label || goal;
+
+const getBirthYear = (birthDate?: string) => {
+  const year = Number((birthDate || "").slice(0, 4));
+  return Number.isFinite(year) && year > 1900 ? year : 1995;
+};
 
 const getAge = (birthDate?: string) => {
   if (!birthDate) return "-";
@@ -69,6 +77,9 @@ export default function ProfilePage() {
       setUser(data);
       setForm({
         name: data.name || "",
+        gender: data.gender || "male",
+        birthYear: getBirthYear(data.birth_date),
+        heightCm: data.height_cm || 170,
         weightKg: data.weight_kg || 0,
         targetWeightKg: data.target_weight_kg || data.weight_kg || 0,
         goal: data.goal,
@@ -114,6 +125,9 @@ export default function ProfilePage() {
     try {
       const updated = await userApi.update(user.id, {
         name: form.name,
+        gender: form.gender,
+        birth_date: `${form.birthYear}-01-01`,
+        height_cm: form.heightCm,
         weight_kg: form.weightKg,
         target_weight_kg: form.targetWeightKg,
         goal: form.goal,
@@ -214,15 +228,15 @@ export default function ProfilePage() {
             <div className="mt-4 space-y-3 text-sm">
               <div className="flex justify-between rounded-xl bg-white/45 px-4 py-3">
                 <span className="text-muted-foreground">性别</span>
-                <span className="font-bold">{user.gender === "female" ? "女士" : "男士"}</span>
+                <span className="font-bold">{form.gender === "female" ? "女士" : "男士"}</span>
               </div>
               <div className="flex justify-between rounded-xl bg-white/45 px-4 py-3">
                 <span className="text-muted-foreground">年龄</span>
-                <span className="font-bold">{getAge(user.birth_date)}</span>
+                <span className="font-bold">{getAge(`${form.birthYear}-01-01`)}</span>
               </div>
               <div className="flex justify-between rounded-xl bg-white/45 px-4 py-3">
                 <span className="text-muted-foreground">身高</span>
-                <span className="font-bold">{user.height_cm} cm</span>
+                <span className="font-bold">{form.heightCm} cm</span>
               </div>
               <div className="flex justify-between rounded-xl bg-white/45 px-4 py-3">
                 <span className="text-muted-foreground">BMR / TDEE</span>
@@ -272,6 +286,44 @@ export default function ProfilePage() {
                   <option key={option.id} value={option.id}>{option.label}</option>
                 ))}
               </select>
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">性别</span>
+              <select
+                value={form.gender}
+                onChange={event => updateForm("gender", event.target.value)}
+                className="w-full rounded-2xl border border-primary/10 bg-white/60 px-5 py-4 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="male">男士</option>
+                <option value="female">女士</option>
+              </select>
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">出生年份</span>
+              <input
+                type="number"
+                min={1920}
+                max={new Date().getFullYear()}
+                step={1}
+                value={form.birthYear}
+                onChange={event => updateForm("birthYear", Number(event.target.value))}
+                className="w-full rounded-2xl border border-primary/10 bg-white/60 px-5 py-4 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">身高 (cm)</span>
+              <input
+                type="number"
+                min={100}
+                max={250}
+                step={0.1}
+                value={form.heightCm}
+                onChange={event => updateForm("heightCm", Number(event.target.value))}
+                className="w-full rounded-2xl border border-primary/10 bg-white/60 px-5 py-4 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+              />
             </label>
 
             <label className="space-y-2">
