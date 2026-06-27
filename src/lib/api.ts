@@ -44,6 +44,35 @@ const asString = (value: unknown, fallback = "") => {
 
 const toArray = <T>(value: unknown): T[] => (Array.isArray(value) ? value as T[] : []);
 
+const BIG_ID_KEYS = [
+  "id",
+  "userId",
+  "user_id",
+  "planId",
+  "plan_id",
+  "logId",
+  "log_id",
+  "reportId",
+  "report_id",
+  "sessionId",
+  "session_id",
+  "messageId",
+  "message_id",
+  "runId",
+  "run_id",
+];
+
+const quoteUnsafeIntegerIds = (json: string) => {
+  const keyPattern = BIG_ID_KEYS.map(key => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  const idFieldPattern = new RegExp(`("(?:${keyPattern})"\\s*:\\s*)(-?\\d{16,})`, "g");
+  return json.replace(idFieldPattern, "$1\"$2\"");
+};
+
+const parseJsonPreservingIds = (text: string) => {
+  if (!text.trim()) return null;
+  return JSON.parse(quoteUnsafeIntegerIds(text));
+};
+
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
   next.setDate(date.getDate() + days);
@@ -158,7 +187,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   if (response.status === 204) return undefined as T;
 
-  const payload = await response.json().catch(() => null);
+  const text = await response.text().catch(() => "");
+  const payload = text ? parseJsonPreservingIds(text) : null;
   if (!response.ok) {
     const message = payload?.message || payload?.detail || response.statusText || "请求失败";
     throw new Error(message);
