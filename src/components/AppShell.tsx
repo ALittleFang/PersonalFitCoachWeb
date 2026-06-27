@@ -26,12 +26,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   }, [isAuthPage, router]);
 
-  const handleLogout = () => {
-    if (!confirm("确定要退出账户吗？")) return;
-    userStorage.clearAll();
-    router.replace("/login");
-  };
-
   return (
     <div className="relative h-full w-full flex flex-col">
       <main className="flex-1 w-full h-full relative z-0">{children}</main>
@@ -64,11 +58,20 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <div className="w-px h-6 bg-border mx-1" />
 
             <button
-              onClick={handleLogout}
-              className="flex items-center justify-center w-10 h-10 rounded-full text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
-              title="退出/重新开始"
+              onClick={() => router.push("/profile")}
+              className={`flex items-center justify-center rounded-full transition-all duration-300 ${
+                pathname === "/profile"
+                  ? "h-10 px-4 gap-2 bg-primary text-white shadow-lg scale-105"
+                  : "h-10 w-10 text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+              }`}
+              title="个人信息"
             >
-              <span className="text-lg">🚪</span>
+              <span className="text-lg">👤</span>
+              {pathname === "/profile" && (
+                <span className="text-sm font-bold tracking-wide animate-in fade-in slide-in-from-bottom-2 duration-300 whitespace-nowrap">
+                  我的
+                </span>
+              )}
             </button>
           </nav>
         </div>
